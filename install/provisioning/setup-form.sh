@@ -237,7 +237,7 @@ omarchy_prompt_timezone() {
   [[ -n $guess ]] || guess=${OMARCHY_FORM_TIMEZONE_FALLBACK:-}
 
   zones=$(timedatectl list-timezones)
-  if [[ -n $guess && $'\n'$zones$'\n' == *$'\n'"$guess"$'\n'* ]]; then
+  if [[ -n $guess && $guess != *$'\n'* && $'\n'$zones$'\n' == *$'\n'"$guess"$'\n'* ]]; then
     zones=$(printf '%s\n' "$guess"; grep -vxF -- "$guess" <<<"$zones")
   fi
 
