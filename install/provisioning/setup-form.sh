@@ -220,7 +220,12 @@ omarchy_prompt_hostname() {
 }
 
 # A fresh machine often hasn't joined a network yet, so the geo guess fails
-# often; guard it or a `set -e` caller dies before the filter fallback.
+# often; guard it or a `set -e` caller dies before the picker opens.
+#
+# The picker is always gum filter, so a city can be typed. The guess goes in
+# as the search text: Enter takes it, and erasing it brings back the whole
+# list. Don't add --selected: at limit 1 gum filter prints that entry even
+# after the user searched for another one.
 omarchy_prompt_timezone() {
   local guess status
   # A preset install media names its timezone; otherwise ask geo.omarchy.org,
@@ -230,11 +235,7 @@ omarchy_prompt_timezone() {
   [[ -n $guess ]] || guess=$(curl -fsS --max-time 5 https://geo.omarchy.org/ 2>/dev/null | jq -r '.timezone // empty' 2>/dev/null) || guess=""
   [[ -n $guess ]] || guess=${OMARCHY_FORM_TIMEZONE_FALLBACK:-}
 
-  if [[ -n $guess ]]; then
-    timezone=$(timedatectl list-timezones | gum choose --height 10 --selected "$guess" --header "$(omarchy_form_text setupForm.timezoneHeader)") && status=0 || status=$?
-  else
-    timezone=$(timedatectl list-timezones | gum filter --height 10 --header "$(omarchy_form_text setupForm.timezoneHeader)") && status=0 || status=$?
-  fi
+  timezone=$(timedatectl list-timezones | gum filter --height 10 --value "$guess" --header "$(omarchy_form_text setupForm.timezoneHeader)") && status=0 || status=$?
   ((status == 0)) || return $status
 
   [[ -n $timezone ]] || timezone="UTC"
